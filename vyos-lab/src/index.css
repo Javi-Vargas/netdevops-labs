@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 33% 6%;
+    --foreground: 168 84% 62%;
+    --card: 220 28% 9%;
+    --card-foreground: 168 84% 62%;
+    --popover: 220 28% 9%;
+    --popover-foreground: 168 84% 62%;
+    --primary: 168 84% 62%;
+    --primary-foreground: 222 33% 6%;
+    --secondary: 220 26% 14%;
+    --secondary-foreground: 168 84% 62%;
+    --muted: 220 24% 13%;
+    --muted-foreground: 168 30% 52%;
+    --accent: 199 95% 56%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 24% 17%;
+    --input: 220 24% 17%;
+    --ring: 168 84% 62%;
+    --radius: 0.5rem;
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-mono);
+  }
+}
+
+/* Terminal scrollbar */
+.terminal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.terminal-scroll::-webkit-scrollbar-track {
+  background: hsl(220 28% 7%);
+}
+.terminal-scroll::-webkit-scrollbar-thumb {
+  background: hsl(220 24% 22%);
+  border-radius: 4px;
+}
+.terminal-scroll::-webkit-scrollbar-thumb:hover {
+  background: hsl(220 24% 30%);
+}
+
+/* Cursor blink */
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.cursor-blink {
+  animation: cursor-blink 1s step-end infinite;
+}
+
+/* Boot animation */
+@keyframes fade-in-line {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.boot-line {
+  animation: fade-in-line 0.05s ease-in forwards;
+}

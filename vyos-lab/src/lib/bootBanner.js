@@ -1,0 +1,23 @@
+// VyOS boot sequence lines (cosmetic).
+export const bootLines = [
+  'Welcome to VyOS',
+  '',
+  'Loading kernel ......................................... OK',
+  'Mounting filesystems ................................... OK',
+  'Starting system log daemon ............................. OK',
+  'Configuring VyOS router ................................ OK',
+  'Loading configuration from /config/config.boot ........ OK',
+  'Starting interfaces .................................... OK',
+  'Starting NAT engine .................................... OK',
+  'Starting DNS forwarder ................................. OK',
+  'Starting SSH daemon .................................... OK',
+  '',
+  'VyOS 1.4 (sagitta)',
+  '',
+  'vyos login: vyos',
+  'Password: ******',
+  '',
+  'Welcome to VyOS!',
+  "Type 'configure' to enter configuration mode, or '?' / 'help' for commands.",
+  '',
+]

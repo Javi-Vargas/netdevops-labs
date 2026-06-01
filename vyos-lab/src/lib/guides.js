@@ -1,0 +1,72 @@
+// Reference cheat-sheets shown in the Training panel's "Reference" tab.
+export const referenceGuides = [
+  {
+    topic: 'Modes & workflow',
+    intro: 'VyOS has two modes. You view state in operational mode and change config in configuration mode using a candidate/commit workflow.',
+    commands: [
+      { cmd: 'configure', why: 'Enter configuration mode (prompt changes from $ to #).' },
+      { cmd: 'set <path> <value>', why: 'Add or change a node in the candidate config.' },
+      { cmd: 'delete <path>', why: 'Remove a node (or a single value) from the candidate.' },
+      { cmd: 'compare', why: 'Show what differs between the candidate and the running config.' },
+      { cmd: 'commit', why: 'Apply the candidate config to the running system.' },
+      { cmd: 'save', why: 'Persist the running config to /config/config.boot so it survives reboot.' },
+      { cmd: 'exit', why: 'Leave configuration mode (must commit or discard first).' },
+      { cmd: 'show configuration commands', why: 'Display the running config as flat set commands.' },
+    ],
+  },
+  {
+    topic: 'Interfaces & basics',
+    intro: 'Configure addressing, hostname, and DNS. Interfaces are named eth0, eth1, lo, wg0, etc.',
+    commands: [
+      { cmd: 'set system host-name r1', why: 'Set the router hostname.' },
+      { cmd: 'set system name-server 1.1.1.1', why: 'Configure an upstream DNS resolver for the router.' },
+      { cmd: 'set interfaces ethernet eth0 address 192.168.1.1/24', why: 'Assign an IPv4 address (CIDR) to eth0.' },
+      { cmd: "set interfaces ethernet eth0 description 'LAN'", why: 'Label the interface.' },
+      { cmd: 'delete interfaces ethernet eth0 disable', why: 'Re-enable an administratively-down interface.' },
+      { cmd: 'show interfaces', why: 'List interfaces with their addresses and state (S/L = State/Link).' },
+      { cmd: 'show interfaces ethernet eth0', why: 'Detailed status for one interface.' },
+    ],
+  },
+  {
+    topic: 'NAT & Firewall',
+    intro: 'Source NAT (masquerade) lets a LAN reach the internet; firewall rulesets filter traffic per interface/zone.',
+    commands: [
+      { cmd: 'set nat source rule 100 source address 192.168.1.0/24', why: 'Match traffic from the LAN subnet.' },
+      { cmd: 'set nat source rule 100 outbound-interface eth1', why: 'Apply NAT on the WAN-facing interface.' },
+      { cmd: 'set nat source rule 100 translation address masquerade', why: 'Rewrite source to the WAN interface address.' },
+      { cmd: 'set firewall name WAN-IN default-action drop', why: 'Drop traffic not explicitly allowed.' },
+      { cmd: 'set firewall name WAN-IN rule 10 action accept', why: 'Allow matching traffic.' },
+      { cmd: 'set firewall name WAN-IN rule 10 state established', why: 'Permit return traffic for established sessions.' },
+      { cmd: 'show nat source rules', why: 'List configured source NAT rules.' },
+      { cmd: 'show firewall', why: 'Show firewall rulesets and rules.' },
+    ],
+  },
+  {
+    topic: 'DHCP & DNS',
+    intro: 'Hand out addresses on the LAN with a DHCP server and resolve names with the DNS forwarder.',
+    commands: [
+      { cmd: 'set service dhcp-server shared-network-name LAN subnet 192.168.1.0/24 subnet-id 1', why: 'Define the DHCP subnet.' },
+      { cmd: 'set service dhcp-server shared-network-name LAN subnet 192.168.1.0/24 range 0 start 192.168.1.100', why: 'Start of the lease pool.' },
+      { cmd: 'set service dhcp-server shared-network-name LAN subnet 192.168.1.0/24 range 0 stop 192.168.1.200', why: 'End of the lease pool.' },
+      { cmd: 'set service dhcp-server shared-network-name LAN subnet 192.168.1.0/24 default-router 192.168.1.1', why: 'Gateway handed to clients.' },
+      { cmd: 'set service dns forwarding listen-address 192.168.1.1', why: 'Where the DNS forwarder listens.' },
+      { cmd: 'set service dns forwarding allow-from 192.168.1.0/24', why: 'Which clients may query.' },
+      { cmd: 'set service dns forwarding name-server 1.1.1.1', why: 'Upstream resolver to forward to.' },
+      { cmd: 'show dhcp server leases', why: 'List active DHCP leases.' },
+    ],
+  },
+  {
+    topic: 'Routing & VPN',
+    intro: 'Add static routes (including a default route) and build a WireGuard site-to-site tunnel.',
+    commands: [
+      { cmd: 'set protocols static route 0.0.0.0/0 next-hop 203.0.113.1', why: 'Default route via the WAN gateway.' },
+      { cmd: 'set protocols static route 10.50.0.0/16 next-hop 192.168.1.254', why: 'Static route to a remote network.' },
+      { cmd: 'set protocols static route 10.50.0.0/16 next-hop 192.168.1.254 distance 10', why: 'Set the administrative distance.' },
+      { cmd: 'set interfaces wireguard wg0 address 10.10.0.1/24', why: 'Tunnel interface address.' },
+      { cmd: 'set interfaces wireguard wg0 port 51820', why: 'UDP listen port for the tunnel.' },
+      { cmd: 'set interfaces wireguard wg0 peer OFFICE allowed-ips 10.20.0.0/24', why: 'Networks reachable through the peer.' },
+      { cmd: 'set interfaces wireguard wg0 peer OFFICE endpoint 203.0.113.50:51820', why: 'Remote peer address and port.' },
+      { cmd: 'show ip route', why: 'Display the routing table.' },
+    ],
+  },
+];
