@@ -1,0 +1,41 @@
+# Dev environment for the labs — Vite dev servers with hot-reload.
+#
+#   docker compose up                 # run both labs
+#   docker compose up vyos-lab        # run just the VyOS lab    -> http://localhost:5173
+#   docker compose up ansible-lab     # run just the Ansible lab -> http://localhost:5174
+#   docker compose down               # stop and remove
+#
+# Source is bind-mounted, so edits on the host hot-reload in the browser.
+# An anonymous volume keeps each container's own node_modules (correct platform
+# binaries) instead of the host's.
+
+services:
+  vyos-lab:
+    build:
+      context: ./vyos-lab
+      dockerfile: Dockerfile.dev
+    # Publish to loopback only — the dev server is for this machine, not the LAN.
+    # (--host 0.0.0.0 in the Dockerfile is still required for Docker's port
+    # forwarding to reach the server inside the container's network namespace.)
+    ports:
+      - "127.0.0.1:5173:5173"
+    volumes:
+      - ./vyos-lab:/app
+      - /app/node_modules
+    environment:
+      - VITE_USE_POLLING=true
+    restart: unless-stopped
+
+  ansible-lab:
+    build:
+      context: ./ansible-lab
+      dockerfile: Dockerfile.dev
+    # Publish to loopback only (see vyos-lab above).
+    ports:
+      - "127.0.0.1:5174:5174"
+    volumes:
+      - ./ansible-lab:/app
+      - /app/node_modules
+    environment:
+      - VITE_USE_POLLING=true
+    restart: unless-stopped

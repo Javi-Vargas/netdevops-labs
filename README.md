@@ -75,6 +75,33 @@ cd <lab> && npm run build      # outputs to <lab>/dist
 
 ---
 
+## Run with Docker (dev, hot-reload)
+
+If you'd rather not install Node locally, run the labs in containers. Each lab
+has a `Dockerfile.dev`, and the root `docker-compose.yml` runs the Vite dev
+server with your source bind-mounted, so edits on the host hot-reload in the
+browser. Requires Docker with Compose v2+.
+
+```bash
+docker compose up                 # run BOTH labs (build on first run)
+docker compose up vyos-lab        # run just the VyOS lab    -> http://localhost:5173
+docker compose up ansible-lab     # run just the Ansible lab -> http://localhost:5174
+docker compose up -d              # run in the background
+docker compose logs -f vyos-lab   # follow a lab's logs
+docker compose down               # stop and remove the containers
+```
+
+Notes:
+- The labs map to the same ports as local dev (5173 / 5174).
+- Source is bind-mounted; each container keeps its own `node_modules` (via an
+  anonymous volume) so platform-specific binaries are correct regardless of host OS.
+- If hot-reload doesn't fire on your host, polling is already enabled through
+  `VITE_USE_POLLING=true` in `docker-compose.yml`.
+- After changing a lab's dependencies (`package.json`), rebuild:
+  `docker compose build <lab>`.
+
+---
+
 ## The labs in a bit more depth
 
 ### vyos-lab — VyOS Router Simulator
