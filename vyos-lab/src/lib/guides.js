@@ -69,4 +69,19 @@ export const referenceGuides = [
       { cmd: 'show ip route', why: 'Display the routing table.' },
     ],
   },
+  {
+    topic: 'Dynamic routing (OSPF & BGP)',
+    intro: 'OSPF floods link-state within areas; BGP peers between autonomous systems. VyOS 1.4 syntax.',
+    commands: [
+      { cmd: 'set protocols ospf parameters router-id 1.1.1.1', why: 'Pin a stable OSPF router-id.' },
+      { cmd: 'set protocols ospf area 0 network 10.0.0.0/24', why: 'Advertise a connected network into an area (repeat for each).' },
+      { cmd: 'set protocols ospf interface eth0 area 0', why: 'Alternative: enable OSPF per interface and place it in an area.' },
+      { cmd: 'set protocols ospf neighbor 10.0.12.2', why: 'Statically define a neighbor (non-broadcast links).' },
+      { cmd: 'run show ip ospf neighbor', why: 'Verify adjacencies (use run from config mode).' },
+      { cmd: 'set protocols bgp system-as 65001', why: 'Set this router’s local AS number.' },
+      { cmd: 'set protocols bgp neighbor 203.0.113.2 remote-as 65002', why: 'Define an eBGP peer and its AS.' },
+      { cmd: 'set protocols bgp address-family ipv4-unicast network 10.0.0.0/24', why: 'Advertise a prefix into BGP.' },
+      { cmd: 'run show ip bgp summary', why: 'Check peer state (Established) and prefixes.' },
+    ],
+  },
 ];

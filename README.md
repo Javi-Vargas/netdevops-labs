@@ -7,7 +7,7 @@ typing.
 
 | Lab | What you practice | Dev port |
 |-----|-------------------|----------|
-| [**vyos-lab**](./vyos-lab) | VyOS router configuration — the `set`/`commit`/`save` config-tree model, operational vs. configuration mode, NAT, firewall, DHCP/DNS, routing & VPN | `5173` |
+| [**vyos-lab**](./vyos-lab) | VyOS router configuration — the `set`/`commit`/`save` config-tree model, operational vs. configuration mode, NAT, firewall, DHCP/DNS, static routing & VPN, dynamic routing (OSPF & BGP), plus a randomized **Drill** mode for reps | `5173` |
 | [**ansible-lab**](./ansible-lab) | Ansible automation — inventory & ad-hoc commands, playbooks/handlers, variables/templates/loops, roles, Galaxy & Vault, with real idempotency | `5174` |
 
 Both run on **different ports**, so you can have them open side by side.
@@ -36,8 +36,54 @@ one lab without ever installing or touching the other.
 
 ## Requirements
 
-- **Node.js 18+** (developed and tested on Node 20)
-- npm (ships with Node)
+To run a lab **without Docker** you need:
+
+- **Node.js 18+** (developed and tested on Node 20) — `npm` ships with it.
+
+To run a lab **with Docker** you need instead:
+
+- **Docker Engine** with the **Compose v2** plugin (`docker compose ...`).
+
+### Verify what you have
+
+```bash
+node --version      # want v18.x or newer (e.g. v20.x)
+npm --version       # any recent npm (10.x+)
+docker --version    # only needed for the Docker path
+docker compose version
+```
+
+### Install the requirements
+
+**Node.js** — easiest cross-platform way is [nvm](https://github.com/nvm-sh/nvm):
+
+```bash
+# install nvm (Linux/macOS), then a current LTS Node:
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+# restart your shell, then:
+nvm install --lts        # installs Node 20+ and npm
+nvm use --lts
+node --version && npm --version   # confirm
+```
+
+Or use your platform's package manager:
+
+```bash
+# macOS (Homebrew)
+brew install node
+
+# Debian / Ubuntu (NodeSource 20.x)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Windows (winget)
+winget install OpenJS.NodeJS.LTS
+```
+
+**Docker** (only for the Docker path) — install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+(macOS/Windows) or Docker Engine + the Compose plugin (Linux), then verify with
+`docker --version` and `docker compose version`. Compose v2 is the `docker compose`
+(space) subcommand — the legacy `docker-compose` (hyphen) is not required.
 
 ## Quick start — pick one lab
 
@@ -110,14 +156,19 @@ a hierarchical **configuration tree** edited with `set`/`delete`, staged in a
 **candidate** config, and applied with `commit` / persisted with `save`.
 
 - **Operational mode** (`vyos@host:~$`): `show interfaces`, `show configuration`,
-  `show ip route`, `show nat`, `show firewall`, `ping`, `configure`.
+  `show ip route`, `show ip ospf [neighbor]`, `show ip bgp [summary]`, `show nat`,
+  `show firewall`, `ping`, `configure`.
 - **Configuration mode** (`vyos@host#`): `set`/`delete`, `commit`, `save`,
   `discard`, `compare`, `edit`/`top`/`up`, `exit`.
-- Training panel with guided **Build** labs, **Troubleshoot** (fix-the-broken-config)
+- Covers interfaces, NAT, firewall, DHCP/DNS, static routing & VPN, and dynamic
+  routing (OSPF & BGP, VyOS 1.4 syntax).
+- Training panel with guided **Build** labs, a randomized **Drill** mode (rapid,
+  auto-checked reps with a streak counter), **Troubleshoot** (fix-the-broken-config)
   labs, a **Reference** cheat-sheet, and a live view of the running config tree.
 
 Try: `configure` → `set interfaces ethernet eth0 address 192.168.1.1/24` →
-`compare` → `commit` → `show interfaces`.
+`compare` → `commit` → `show interfaces`. Or OSPF: `set protocols ospf area 0
+network 10.0.0.0/24` → `commit` → `run show ip ospf`.
 
 ### ansible-lab — Ansible Control-Node Simulator
 A **mini Ansible interpreter** that parses real playbook YAML and runs tasks

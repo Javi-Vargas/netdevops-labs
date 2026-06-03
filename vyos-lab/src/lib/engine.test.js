@@ -8,6 +8,7 @@ import {
 } from './vyosEngine'
 import { isReachable } from './pingSimulator'
 import { buildScenarios, troubleshootScenarios } from './scenarios'
+import { drillTopics } from './drills'
 
 // Thread a list of CLI lines through the engine.
 function run(state, lines) {
@@ -169,6 +170,60 @@ describe('scenario validators', () => {
       s = run(s, ['configure', ...solutionLines(scenario), 'commit'])
       const after = scenario.validation(s)
       expect(after.every(r => r.pass)).toBe(true)
+    })
+  }
+})
+
+describe('OSPF/BGP grammar', () => {
+  it('keeps multiple networks under one OSPF area (multi-value)', () => {
+    const t = treeFromCommands([
+      'set protocols ospf area 0 network 10.0.0.0/24',
+      'set protocols ospf area 0 network 10.0.12.0/24',
+    ])
+    const cmds = renderCommands(t)
+    expect(cmds).toContain('set protocols ospf area 0 network 10.0.0.0/24')
+    expect(cmds).toContain('set protocols ospf area 0 network 10.0.12.0/24')
+  })
+
+  it('renders BGP system-as and neighbor remote-as', () => {
+    const t = treeFromCommands([
+      'set protocols bgp system-as 65001',
+      'set protocols bgp neighbor 203.0.113.2 remote-as 65002',
+    ])
+    const cmds = renderCommands(t)
+    expect(cmds).toContain('set protocols bgp system-as 65001')
+    expect(cmds).toContain('set protocols bgp neighbor 203.0.113.2 remote-as 65002')
+  })
+
+  it('show ip bgp summary reflects the configured peer', () => {
+    let s = stateFromCommands([])
+    s = run(s, [
+      'configure',
+      'set protocols bgp system-as 65001',
+      'set protocols bgp neighbor 203.0.113.2 remote-as 65002',
+      'commit',
+    ])
+    const out = execute('run show ip bgp summary', s).output
+    expect(out).toContain('local AS number 65001')
+    expect(out).toContain('203.0.113.2')
+  })
+
+  it('show ip ospf neighbor lists a static neighbor', () => {
+    let s = stateFromCommands([])
+    s = run(s, ['configure', 'set protocols ospf neighbor 10.0.12.2', 'commit'])
+    expect(execute('run show ip ospf neighbor', s).output).toContain('10.0.12.2')
+  })
+})
+
+describe('drills', () => {
+  for (const topic of drillTopics) {
+    it(`"${topic.label}" drills are solvable by their own solution`, () => {
+      for (let i = 0; i < 12; i++) {
+        const drill = topic.generate()
+        let s = stateFromCommands(drill.initialCommands || [])
+        s = run(s, ['configure', ...drill.solution, 'commit'])
+        expect(drill.check(s)).toBe(true)
+      }
     })
   }
 })

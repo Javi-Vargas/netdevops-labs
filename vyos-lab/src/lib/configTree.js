@@ -35,9 +35,11 @@ const LEAF_SPEC = {
   'authoritative': { valueless: true }, 'subnet-id': {},
   // routing / vpn
   'distance': {}, 'blackhole': { valueless: true },
-  'network': {}, 'router-id': {}, 'remote-as': {}, 'metric': {},
+  'network': { multi: true }, 'router-id': {}, 'remote-as': {}, 'metric': {},
   'private-key': {}, 'public-key': {}, 'allowed-ips': { multi: true },
   'endpoint': {}, 'persistent-keepalive': {}, 'port-number': {},
+  // dynamic routing (OSPF / BGP, VyOS 1.4)
+  'system-as': {}, 'passive': { valueless: true }, 'route-reflector-client': { valueless: true },
 }
 
 // Container keys whose immediate child is an instance name. Used only to render
@@ -48,6 +50,7 @@ const TAG_NODES = new Set([
   'address-group', 'network-group', 'port-group', 'interface-group',
   'shared-network-name', 'subnet', 'static-mapping', 'route', 'route6',
   'next-hop', 'peer', 'neighbor', 'user', 'server', 'tunnel-interface',
+  'area', 'interface',
 ])
 
 export function createTree() {

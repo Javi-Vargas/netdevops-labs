@@ -6,6 +6,7 @@ import {
 import {
   showConfiguration, showInterfaces, showRoute, showNat, showFirewall,
   showDhcpLeases, showVersion, showLog,
+  showOspf, showOspfNeighbor, showBgp, showBgpSummary,
 } from './showCommands'
 import { simulatePing } from './pingSimulator'
 import { helpText, OPERATIONAL_WORDS, SHOW_WORDS, CONFIG_WORDS, CONFIG_PATHS } from './commandHelp'
@@ -115,6 +116,8 @@ function handleShow(args, tree) {
       return showInterfaces(tree, args[1])
     case 'ip':
       if (args[1] === 'route') return showRoute(tree)
+      if (args[1] === 'ospf') return args[2] === 'neighbor' ? showOspfNeighbor(tree) : showOspf(tree)
+      if (args[1] === 'bgp') return args[2] === 'summary' ? showBgpSummary(tree) : showBgp(tree)
       return showInterfaces(tree)
     case 'route':
             return showRoute(tree)

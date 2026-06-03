@@ -38,9 +38,11 @@ show configuration
 - **Configuration mode** (`vyos@r1#`): `set`/`delete <path> [value]`, `commit`,
   `save`, `discard`, `compare`, `show`, `edit`/`top`/`up`, `exit`.
 
-The right-hand **Training** panel has guided **Build** labs, **Troubleshoot**
-(fix-the-broken-config) labs, and a **Reference** cheat-sheet, plus a live view
-of the running config tree. `reset` (operational mode) restores defaults.
+The right-hand **Training** panel has guided **Build** labs, a **Drill** tab
+(rapid, randomized, auto-checked tasks with a streak counter for reps),
+**Troubleshoot** (fix-the-broken-config) labs, and a **Reference** cheat-sheet,
+plus a live view of the running config tree. `reset` (operational mode) restores
+defaults.
 
 ## Test
 
@@ -50,4 +52,5 @@ npm test
 
 ## Topics covered
 
-Interfaces & basics · NAT & Firewall · DHCP & DNS · Routing & VPN
+Interfaces & basics · NAT & Firewall · DHCP & DNS · Static routing & VPN ·
+Dynamic routing (OSPF & BGP)

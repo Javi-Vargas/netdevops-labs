@@ -157,6 +157,116 @@ export const buildScenarios = [
       ]
     },
   },
+  {
+    id: 'build-interfaces-multi',
+    title: 'Address multiple interfaces',
+    category: 'build',
+    difficulty: 'beginner',
+    duration: '6 min',
+    description: 'Reps on interface configuration: address two interfaces, tune the MTU, label them, and inspect in config mode.',
+    brief: 'Bring up eth1 and eth2 with addresses, set a jumbo-ish MTU on eth1, describe eth2, then verify with show — both in configuration mode and operationally.',
+    objectives: [
+      'Assign 10.1.1.1/24 to eth1',
+      'Assign 10.2.2.1/24 to eth2',
+      'Set eth1 MTU to 1400',
+      'Add a description to eth2',
+    ],
+    commands: [
+      { cmd: 'configure', why: 'Enter configuration mode.' },
+      { cmd: 'set interfaces ethernet eth1 address 10.1.1.1/24', why: 'Address the first interface.' },
+      { cmd: 'set interfaces ethernet eth2 address 10.2.2.1/24', why: 'Address the second interface.' },
+      { cmd: 'set interfaces ethernet eth1 mtu 1400', why: 'Tune the MTU on eth1.' },
+      { cmd: "set interfaces ethernet eth2 description 'UPLINK'", why: 'Label eth2.' },
+      { cmd: 'show interfaces ethernet', why: 'Review the candidate interfaces subtree (config-mode show).' },
+      { cmd: 'commit', why: 'Apply the candidate configuration.' },
+      { cmd: 'run show interfaces', why: 'Verify operational state (S/L) and addresses.' },
+      { cmd: 'save', why: 'Persist it.' },
+    ],
+    initialCommands: DEFAULTS,
+    validation: (s) => {
+      const t = s.running
+      return [
+        ok(configHas(t, 'interfaces ethernet eth1 address 10.1.1.1/24'), 'eth1 address'),
+        ok(configHas(t, 'interfaces ethernet eth2 address 10.2.2.1/24'), 'eth2 address'),
+        ok(configHas(t, 'interfaces ethernet eth1 mtu 1400'), 'eth1 mtu'),
+        ok(configHasPrefix(t, 'interfaces ethernet eth2 description'), 'eth2 description'),
+      ]
+    },
+  },
+  {
+    id: 'build-ospf',
+    title: 'OSPF single area',
+    category: 'build',
+    difficulty: 'intermediate',
+    duration: '7 min',
+    description: 'Bring up OSPF: set a router-id, advertise two connected networks into area 0, and define a neighbor.',
+    brief: 'eth0 (10.0.0.1/24) faces the LAN and eth1 (10.0.12.1/24) faces a peer at 10.0.12.2. Advertise both into OSPF area 0.',
+    objectives: [
+      'Set the OSPF router-id to 1.1.1.1',
+      'Advertise 10.0.0.0/24 into area 0',
+      'Advertise 10.0.12.0/24 into area 0',
+      'Statically define OSPF neighbor 10.0.12.2',
+    ],
+    commands: [
+      { cmd: 'configure', why: 'Enter configuration mode.' },
+      { cmd: 'set protocols ospf parameters router-id 1.1.1.1', why: 'Pin a stable router-id.' },
+      { cmd: 'set protocols ospf area 0 network 10.0.0.0/24', why: 'Advertise the LAN into the backbone area.' },
+      { cmd: 'set protocols ospf area 0 network 10.0.12.0/24', why: 'Advertise the transit link into area 0.' },
+      { cmd: 'set protocols ospf neighbor 10.0.12.2', why: 'Define the peer as a neighbor.' },
+      { cmd: 'commit', why: 'Apply the configuration.' },
+      { cmd: 'run show ip ospf neighbor', why: 'Verify the adjacency.' },
+      { cmd: 'save', why: 'Persist it.' },
+    ],
+    initialCommands: [
+      ...DEFAULTS,
+      'set interfaces ethernet eth0 address 10.0.0.1/24',
+      'set interfaces ethernet eth1 address 10.0.12.1/24',
+    ],
+    validation: (s) => {
+      const t = s.running
+      return [
+        ok(configHas(t, 'protocols ospf parameters router-id 1.1.1.1'), 'router-id'),
+        ok(configHas(t, 'protocols ospf area 0 network 10.0.0.0/24'), 'area 0 network LAN'),
+        ok(configHas(t, 'protocols ospf area 0 network 10.0.12.0/24'), 'area 0 network transit'),
+        ok(configHasPrefix(t, 'protocols ospf neighbor 10.0.12.2'), 'neighbor'),
+      ]
+    },
+  },
+  {
+    id: 'build-bgp',
+    title: 'eBGP peering',
+    category: 'build',
+    difficulty: 'advanced',
+    duration: '7 min',
+    description: 'Establish an eBGP session with an upstream and advertise a prefix (VyOS 1.4 syntax).',
+    brief: 'eth1 (203.0.113.1/24) connects to ISP 203.0.113.2 in AS 65002. You are AS 65001 — peer up and advertise 10.0.0.0/24.',
+    objectives: [
+      'Set the local AS to 65001',
+      'Configure eBGP neighbor 203.0.113.2 with remote-as 65002',
+      'Advertise 10.0.0.0/24 via address-family ipv4-unicast',
+    ],
+    commands: [
+      { cmd: 'configure', why: 'Enter configuration mode.' },
+      { cmd: 'set protocols bgp system-as 65001', why: 'Set this router’s local AS.' },
+      { cmd: 'set protocols bgp neighbor 203.0.113.2 remote-as 65002', why: 'Define the eBGP peer and its AS.' },
+      { cmd: 'set protocols bgp address-family ipv4-unicast network 10.0.0.0/24', why: 'Advertise the prefix into BGP.' },
+      { cmd: 'commit', why: 'Apply the configuration.' },
+      { cmd: 'run show ip bgp summary', why: 'Confirm the peer reaches Established.' },
+      { cmd: 'save', why: 'Persist it.' },
+    ],
+    initialCommands: [
+      ...DEFAULTS,
+      'set interfaces ethernet eth1 address 203.0.113.1/24',
+    ],
+    validation: (s) => {
+      const t = s.running
+      return [
+        ok(configHas(t, 'protocols bgp system-as 65001'), 'local AS'),
+        ok(configHas(t, 'protocols bgp neighbor 203.0.113.2 remote-as 65002'), 'neighbor remote-as'),
+        ok(configHas(t, 'protocols bgp address-family ipv4-unicast network 10.0.0.0/24'), 'advertised network'),
+      ]
+    },
+  },
 ]
 
 // ---- Troubleshooting labs --------------------------------------------------
@@ -293,6 +403,38 @@ export const troubleshootScenarios = [
         ok(configHasPrefix(t, 'interfaces wireguard wg0 address'), 'address'),
         ok(configHasPrefix(t, 'interfaces wireguard wg0 port'), 'port'),
         ok(configHasPrefix(t, 'interfaces wireguard wg0 peer OFFICE allowed-ips'), 'allowed-ips'),
+      ]
+    },
+  },
+  {
+    id: 'ts-ospf-area-mismatch',
+    title: 'OSPF adjacency won’t form',
+    category: 'troubleshoot',
+    difficulty: 'advanced',
+    duration: '6 min',
+    description: 'OSPF is configured with a router-id and a neighbor, but the transit link never comes up. The link network was never advertised into area 0.',
+    brief: 'eth1 (10.0.12.1/24) faces neighbor 10.0.12.2, but only the LAN 10.0.0.0/24 is in area 0 — the transit network 10.0.12.0/24 is missing. Add it.',
+    objectives: [
+      'The transit network 10.0.12.0/24 is advertised into area 0',
+    ],
+    commands: [
+      { cmd: 'run show ip ospf', why: 'Notice only one network is in area 0.' },
+      { cmd: 'show protocols ospf', why: 'Inspect the candidate — the transit network is missing.' },
+      { cmd: 'set protocols ospf area 0 network 10.0.12.0/24', why: 'Advertise the transit link so the adjacency can form.' },
+      { cmd: 'commit ; save', why: 'Apply the fix.' },
+    ],
+    initialCommands: [
+      ...DEFAULTS,
+      'set interfaces ethernet eth0 address 10.0.0.1/24',
+      'set interfaces ethernet eth1 address 10.0.12.1/24',
+      'set protocols ospf parameters router-id 1.1.1.1',
+      'set protocols ospf area 0 network 10.0.0.0/24',
+      'set protocols ospf neighbor 10.0.12.2',
+    ],
+    validation: (s) => {
+      const t = s.running
+      return [
+        ok(configHas(t, 'protocols ospf area 0 network 10.0.12.0/24'), 'transit network in area 0'),
       ]
     },
   },

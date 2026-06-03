@@ -6,7 +6,8 @@ import ScenarioCard from './ScenarioCard';
 import ScenarioDetail from './ScenarioDetail';
 import CommandGuide from './CommandGuide';
 import ConfigTreePanel from './ConfigTreePanel';
-import { BookOpen, Wrench, Library, Network } from 'lucide-react';
+import DrillPanel from './DrillPanel';
+import { BookOpen, Wrench, Library, Network, Zap } from 'lucide-react';
 
 const allScenarios = [...buildScenarios, ...troubleshootScenarios];
 
@@ -48,8 +49,9 @@ export default function TrainingPanel({ engineState, onLoadScenario }) {
         {!activeScenario && (
           <div className="flex mt-2 gap-1">
             <TabButton active={tab === 'build'} onClick={() => setTab('build')} icon={BookOpen} label="Build" color="accent" />
-            <TabButton active={tab === 'troubleshoot'} onClick={() => setTab('troubleshoot')} icon={Wrench} label="Troubleshoot" color="amber" />
-            <TabButton active={tab === 'reference'} onClick={() => setTab('reference')} icon={Library} label="Reference" color="emerald" />
+            <TabButton active={tab === 'drill'} onClick={() => setTab('drill')} icon={Zap} label="Drill" color="sky" />
+            <TabButton active={tab === 'troubleshoot'} onClick={() => setTab('troubleshoot')} icon={Wrench} label="Fix" color="amber" />
+            <TabButton active={tab === 'reference'} onClick={() => setTab('reference')} icon={Library} label="Ref" color="emerald" />
           </div>
         )}
       </div>
@@ -61,6 +63,10 @@ export default function TrainingPanel({ engineState, onLoadScenario }) {
               <ScenarioCard key={s.id} scenario={s} isActive={false} onClick={() => handleSelect(s.id)} />
             ))}
           </div>
+        )}
+
+        {!activeScenario && tab === 'drill' && (
+          <DrillPanel engineState={engineState} onLoadScenario={onLoadScenario} />
         )}
 
         {!activeScenario && tab === 'troubleshoot' && (
@@ -120,6 +126,7 @@ export default function TrainingPanel({ engineState, onLoadScenario }) {
 function TabButton({ active, onClick, icon: Icon, label, color }) {
   const colorMap = {
     accent: 'bg-accent/20 text-accent',
+    sky: 'bg-sky-500/20 text-sky-400',
     amber: 'bg-amber-500/20 text-amber-400',
     emerald: 'bg-emerald-500/20 text-emerald-400',
   };

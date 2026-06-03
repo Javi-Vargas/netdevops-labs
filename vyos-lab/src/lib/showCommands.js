@@ -223,6 +223,104 @@ export function showLog() {
   ].join('\n')
 }
 
+// ---- OSPF / BGP (derived from config; heuristic, not a real routing FSM) ----
+
+export function deriveOspf(tree) {
+  const ospf = tree?.protocols?.ospf
+  if (!isContainer(ospf)) return { configured: false }
+  const routerId = (valuesAt(tree, ['protocols', 'ospf', 'parameters', 'router-id']) || [])[0] || null
+  const areas = {}
+  if (isContainer(ospf.area)) {
+    for (const a of Object.keys(ospf.area)) {
+      areas[a] = valuesAt(tree, ['protocols', 'ospf', 'area', a, 'network']) || []
+    }
+  }
+  const neighbors = isContainer(ospf.neighbor) ? Object.keys(ospf.neighbor) : []
+  const ifaces = isContainer(ospf.interface) ? Object.keys(ospf.interface) : []
+  return { configured: true, routerId, areas, neighbors, ifaces }
+}
+
+export function showOspf(tree) {
+  const o = deriveOspf(tree)
+  if (!o.configured) return '% OSPF instance not found'
+  const areaIds = Object.keys(o.areas)
+  const lines = [
+    ` Routing Process "ospf" with ID ${o.routerId || '0.0.0.0'}`,
+    ' Supports only single TOS(TOS0) routes',
+    ` Number of areas in this router is ${areaIds.length}`,
+  ]
+  for (const a of areaIds) {
+    lines.push(`    Area ${a}`)
+    for (const n of o.areas[a]) lines.push(`        Network: ${n}`)
+  }
+  return lines.join('\n')
+}
+
+export function showOspfNeighbor(tree) {
+  const o = deriveOspf(tree)
+  if (!o.configured) return '% OSPF instance not found'
+  const lines = ['Neighbor ID     Pri State           Dead Time  Address         Interface']
+  if (!o.neighbors.length) {
+    lines.push('(no OSPF neighbors — none statically configured and no adjacencies formed yet)')
+    return lines.join('\n')
+  }
+  o.neighbors.forEach((ip, i) => {
+    lines.push(pad(ip, 16) + pad('1', 4) + pad('Full/DR', 16) + pad(`${30 + rnd(10)}.${rnd(900)}s`, 11) + pad(ip, 16) + (o.ifaces[i] || 'eth0'))
+  })
+  return lines.join('\n')
+}
+
+export function deriveBgp(tree) {
+  const bgp = tree?.protocols?.bgp
+  if (!isContainer(bgp)) return { configured: false }
+  const localAs = (valuesAt(tree, ['protocols', 'bgp', 'system-as']) || [])[0] || null
+  const neighbors = []
+  if (isContainer(bgp.neighbor)) {
+    for (const ip of Object.keys(bgp.neighbor)) {
+      const ras = (valuesAt(tree, ['protocols', 'bgp', 'neighbor', ip, 'remote-as']) || [])[0] || '?'
+      neighbors.push({ ip, remoteAs: ras })
+    }
+  }
+  const networks = valuesAt(tree, ['protocols', 'bgp', 'address-family', 'ipv4-unicast', 'network']) || []
+  return { configured: true, localAs, neighbors, networks }
+}
+
+export function showBgpSummary(tree) {
+  const b = deriveBgp(tree)
+  if (!b.configured) return '% BGP instance not found'
+  const lines = [
+    `BGP router identifier 0.0.0.0, local AS number ${b.localAs || '?'} vrf-id 0`,
+    'BGP table version 1',
+    `RIB entries ${b.networks.length}, using ${1 + b.networks.length} KiB of memory`,
+    '',
+    'Neighbor        V         AS   MsgRcvd   MsgSent   Up/Down  State/PfxRcd',
+  ]
+  if (!b.neighbors.length) {
+    lines.push('(no BGP neighbors configured)')
+  } else {
+    b.neighbors.forEach(n => {
+      const up = `${rnd(2)}:${String(rnd(60)).padStart(2, '0')}:${String(rnd(60)).padStart(2, '0')}`
+      lines.push(pad(n.ip, 16) + pad('4', 2) + pad(n.remoteAs, 11) + pad(10 + rnd(90), 10) + pad(10 + rnd(90), 10) + pad(up, 9) + rnd(5))
+    })
+  }
+  lines.push('')
+  lines.push(`Total number of neighbors ${b.neighbors.length}`)
+  return lines.join('\n')
+}
+
+export function showBgp(tree) {
+  const b = deriveBgp(tree)
+  if (!b.configured) return '% BGP instance not found'
+  const lines = [
+    'BGP table version is 1, local router ID is 0.0.0.0',
+    '',
+    '   Network          Next Hop            Metric LocPrf Weight Path',
+  ]
+  if (!b.networks.length) lines.push('(no networks advertised)')
+  else b.networks.forEach(n => lines.push(`*> ${pad(n, 17)}0.0.0.0              0         32768 i`))
+  return lines.join('\n')
+}
+
 // ---- small formatting helpers ---------------------------------------------
 
 function pad(s, n) {
