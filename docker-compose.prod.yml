@@ -1,0 +1,28 @@
+# Pull-only / production compose — pre-built images served by nginx.
+#
+# Run WITHOUT cloning the repo (just this one file):
+#   curl -O https://raw.githubusercontent.com/Javi-Vargas/netdevops-labs/main/docker-compose.prod.yml
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#   # vyos-lab    -> http://localhost:5173
+#   # ansible-lab -> http://localhost:5174
+#   docker compose -f docker-compose.prod.yml down   # stop
+#
+# `image:` makes `pull` work with no source on disk. The `build:` blocks are only
+# used if you have the repo cloned and run `docker compose -f ... build`.
+services:
+  vyos-lab:
+    image: jvargas4/vyos-lab:latest
+    build:
+      context: ./vyos-lab          # only used when building from a clone
+    ports:
+      - "127.0.0.1:5173:80"
+    restart: unless-stopped
+
+  ansible-lab:
+    image: jvargas4/ansible-lab:latest
+    build:
+      context: ./ansible-lab       # only used when building from a clone
+    ports:
+      - "127.0.0.1:5174:80"
+    restart: unless-stopped

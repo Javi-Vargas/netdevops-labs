@@ -7,7 +7,7 @@ typing.
 
 | Lab | What you practice | Dev port |
 |-----|-------------------|----------|
-| [**vyos-lab**](./vyos-lab) | VyOS router configuration — the `set`/`commit`/`save` config-tree model, operational vs. configuration mode, NAT, firewall, DHCP/DNS, static routing & VPN, dynamic routing (OSPF & BGP), plus a randomized **Drill** mode for reps | `5173` |
+| [**vyos-lab**](./vyos-lab) | VyOS router configuration — the `set`/`commit`/`save` config-tree model, operational vs. configuration mode, source & destination NAT, stateful firewall, DHCP/DNS (incl. reservations), static & dynamic routing (OSPF & BGP), VPN (WireGuard + IPSec), plus a randomized **Drill** mode for reps | `5173` |
 | [**ansible-lab**](./ansible-lab) | Ansible automation — inventory & ad-hoc commands, playbooks/handlers, variables/templates/loops, roles, Galaxy & Vault, with real idempotency | `5174` |
 
 Both run on **different ports**, so you can have them open side by side.
@@ -148,6 +148,29 @@ Notes:
 
 ---
 
+## Run with Docker (pull-only, no clone)
+
+To just *run* the labs — no clone, no Node, no build — use the pre-built images on
+Docker Hub (`jvargas4/vyos-lab`, `jvargas4/ansible-lab`). Download only the
+production compose file and start it. Requires Docker with Compose v2+.
+
+```bash
+curl -O https://raw.githubusercontent.com/Javi-Vargas/netdevops-labs/main/docker-compose.prod.yml
+docker compose -f docker-compose.prod.yml pull    # download the images
+docker compose -f docker-compose.prod.yml up -d   # start them
+# vyos-lab -> http://localhost:5173 ,  ansible-lab -> http://localhost:5174
+docker compose -f docker-compose.prod.yml down    # stop
+```
+
+Notes:
+- These are production builds (static files served by nginx), so there's **no
+  hot-reload** — use the dev workflow above when editing.
+- The images are public, so no `docker login` is needed to pull them.
+- Maintainers publish new images with `docker login && ./publish.sh` (builds both
+  labs and pushes `:latest` + the `package.json` version to Docker Hub).
+
+---
+
 ## The labs in a bit more depth
 
 ### vyos-lab — VyOS Router Simulator
@@ -156,15 +179,18 @@ a hierarchical **configuration tree** edited with `set`/`delete`, staged in a
 **candidate** config, and applied with `commit` / persisted with `save`.
 
 - **Operational mode** (`vyos@host:~$`): `show interfaces`, `show configuration`,
-  `show ip route`, `show ip ospf [neighbor]`, `show ip bgp [summary]`, `show nat`,
-  `show firewall`, `ping`, `configure`.
+  `show ip route`, `show ip ospf [neighbor]`, `show ip bgp [summary]`,
+  `show nat source|destination rules`, `show vpn ipsec sa`, `show firewall`,
+  `ping`, `configure`.
 - **Configuration mode** (`vyos@host#`): `set`/`delete`, `commit`, `save`,
   `discard`, `compare`, `edit`/`top`/`up`, `exit`.
-- Covers interfaces, NAT, firewall, DHCP/DNS, static routing & VPN, and dynamic
-  routing (OSPF & BGP, VyOS 1.4 syntax).
+- Covers interfaces, source/destination NAT, stateful firewall, DHCP/DNS (incl.
+  reservations), static routing, dynamic routing (OSPF & BGP), and VPN (WireGuard +
+  IPSec site-to-site) — VyOS 1.4 syntax.
 - Training panel with guided **Build** labs, a randomized **Drill** mode (rapid,
-  auto-checked reps with a streak counter), **Troubleshoot** (fix-the-broken-config)
-  labs, a **Reference** cheat-sheet, and a live view of the running config tree.
+  auto-checked reps; topics: Interfaces, OSPF, BGP, Firewall, NAT, DHCP, IPSec),
+  **Troubleshoot** (fix-the-broken-config) labs, a **Reference** cheat-sheet, and a
+  live view of the running config tree.
 
 Try: `configure` → `set interfaces ethernet eth0 address 192.168.1.1/24` →
 `compare` → `commit` → `show interfaces`. Or OSPF: `set protocols ospf area 0
