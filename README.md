@@ -36,13 +36,12 @@ one lab without ever installing or touching the other.
 
 ## Requirements
 
-To run a lab **without Docker** you need:
+What you need depends on **which path you pick** under [Running the labs](#running-the-labs--pick-one-path) below:
 
-- **Node.js 18+** (developed and tested on Node 20) — `npm` ships with it.
-
-To run a lab **with Docker** you need instead:
-
-- **Docker Engine** with the **Compose v2** plugin (`docker compose ...`).
+- **Option A — Run only (pull the image):** just **Docker Engine** with the
+  **Compose v2** plugin (`docker compose ...`). No Node, no clone.
+- **Option B — Clone & develop:** **Node.js 18+** (tested on Node 20; `npm` ships
+  with it) **or** **Docker** with Compose v2+ — either one is enough.
 
 ### Verify what you have
 
@@ -85,74 +84,26 @@ winget install OpenJS.NodeJS.LTS
 `docker --version` and `docker compose version`. Compose v2 is the `docker compose`
 (space) subcommand — the legacy `docker-compose` (hyphen) is not required.
 
-## Quick start — pick one lab
+## Running the labs — pick ONE path
 
-You only need to `cd` into the lab you want. Each is identical to run:
+There are two independent ways to get a lab running. **You don't do both** — choose
+the one that matches your goal:
 
-### VyOS Lab
-```bash
-cd vyos-lab
-npm install
-npm run dev          # → http://localhost:5173
-```
-
-### Ansible Lab
-```bash
-cd ansible-lab
-npm install
-npm run dev          # → http://localhost:5174
-```
-
-### Run both at once
-Open two terminals and run each lab's `npm run dev`. Because the ports differ
-(5173 vs 5174), they won't collide.
-
-### Test a lab
-Each lab ships a Vitest suite covering its simulation engine:
-```bash
-cd vyos-lab && npm test
-cd ansible-lab && npm test
-```
-
-### Build a lab (static output)
-```bash
-cd <lab> && npm run build      # outputs to <lab>/dist
-```
+| | **Option A — Run only** | **Option B — Clone & develop** |
+|---|---|---|
+| You want to… | just *use* the labs | edit or contribute to them |
+| Clone the repo? | **No** | **Yes** |
+| Toolchain needed | Docker only | Node **or** Docker |
+| Hot-reload editing | — | ✅ |
+| Get latest changes | `docker compose pull` | `git pull` |
 
 ---
 
-## Run with Docker (dev, hot-reload)
+### Option A — Run only (pull prebuilt images, no clone)
 
-If you'd rather not install Node locally, run the labs in containers. Each lab
-has a `Dockerfile.dev`, and the root `docker-compose.yml` runs the Vite dev
-server with your source bind-mounted, so edits on the host hot-reload in the
-browser. Requires Docker with Compose v2+.
-
-```bash
-docker compose up                 # run BOTH labs (build on first run)
-docker compose up vyos-lab        # run just the VyOS lab    -> http://localhost:5173
-docker compose up ansible-lab     # run just the Ansible lab -> http://localhost:5174
-docker compose up -d              # run in the background
-docker compose logs -f vyos-lab   # follow a lab's logs
-docker compose down               # stop and remove the containers
-```
-
-Notes:
-- The labs map to the same ports as local dev (5173 / 5174).
-- Source is bind-mounted; each container keeps its own `node_modules` (via an
-  anonymous volume) so platform-specific binaries are correct regardless of host OS.
-- If hot-reload doesn't fire on your host, polling is already enabled through
-  `VITE_USE_POLLING=true` in `docker-compose.yml`.
-- After changing a lab's dependencies (`package.json`), rebuild:
-  `docker compose build <lab>`.
-
----
-
-## Run with Docker (pull-only, no clone)
-
-To just *run* the labs — no clone, no Node, no build — use the pre-built images on
-Docker Hub (`jvargas4/vyos-lab`, `jvargas4/ansible-lab`). Download only the
-production compose file and start it. Requires Docker with Compose v2+.
+Just *run* the labs — no clone, no Node, no build. Uses the prebuilt images on
+Docker Hub (`jvargas4/vyos-lab`, `jvargas4/ansible-lab`).
+**Requires:** Docker with Compose v2+. Download only the production compose file:
 
 ```bash
 curl -O https://raw.githubusercontent.com/Javi-Vargas/netdevops-labs/main/docker-compose.prod.yml
@@ -162,12 +113,64 @@ docker compose -f docker-compose.prod.yml up -d   # start them
 docker compose -f docker-compose.prod.yml down    # stop
 ```
 
-Notes:
-- These are production builds (static files served by nginx), so there's **no
-  hot-reload** — use the dev workflow above when editing.
+- Production builds (static files served by nginx) — there's **no hot-reload**.
+  Want to edit the labs? Use Option B instead.
 - The images are public, so no `docker login` is needed to pull them.
-- Maintainers publish new images with `docker login && ./publish.sh` (builds both
-  labs and pushes `:latest` + the `package.json` version to Docker Hub).
+
+---
+
+### Option B — Clone & develop
+
+For editing or contributing. **First, clone the repo** (required for this whole option):
+
+```bash
+git clone https://github.com/Javi-Vargas/netdevops-labs.git
+cd netdevops-labs
+```
+
+Then pick **one** way to run it — **B1 (local Node)** *or* **B2 (Docker dev)**. Both
+edit the same source and both hot-reload; the only difference is whether the
+toolchain runs on your host (B1) or in a container (B2).
+
+**B1 — Local Node (no Docker).** *Requires Node.js 18+.* `cd` into the lab you want
+— each runs the same way:
+
+```bash
+cd vyos-lab        # or: cd ansible-lab
+npm install        # first time only
+npm run dev        # vyos -> http://localhost:5173 , ansible -> http://localhost:5174
+```
+
+Run **both at once** by opening two terminals (the ports differ, so no collision).
+
+**B2 — Docker dev (no Node on your host).** *Requires Docker with Compose v2+.* From
+the repo root, `docker-compose.yml` runs the Vite dev server with your source
+bind-mounted, so edits on the host hot-reload in the browser:
+
+```bash
+docker compose up                 # run BOTH labs (build on first run)
+docker compose up vyos-lab        # just the VyOS lab    -> http://localhost:5173
+docker compose up ansible-lab     # just the Ansible lab -> http://localhost:5174
+docker compose up -d              # run in the background
+docker compose logs -f vyos-lab   # follow a lab's logs
+docker compose down               # stop and remove the containers
+```
+
+- Same ports as local dev (5173 / 5174).
+- Each container keeps its own `node_modules` (anonymous volume), so platform
+  binaries are correct regardless of host OS.
+- Hot-reload not firing? Polling is already enabled via `VITE_USE_POLLING=true`.
+- After changing a lab's `package.json`, rebuild: `docker compose build <lab>`.
+
+**Optional (Option B only).** Not needed to *run* a lab — handy while developing:
+
+```bash
+cd <lab> && npm test        # run that lab's Vitest suite
+cd <lab> && npm run build   # produce static output in <lab>/dist
+```
+
+> **Maintainers:** to (re)publish the Option A images, run `docker login && ./publish.sh`
+> — it builds both labs and pushes `:latest` + the `package.json` version to Docker Hub.
 
 ---
 
